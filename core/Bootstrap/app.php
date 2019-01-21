@@ -25,4 +25,6 @@ $app->bind(
 // Bind config driver
 $app->bind(\OpxCore\Interfaces\ConfigInterface::class, \OpxCore\Config\Config::class);
 
+$app->init();
+
 return $app;
