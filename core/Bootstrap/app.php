@@ -1,5 +1,12 @@
 <?php
 
+use OpxCore\Interfaces\ConfigInterface;
+use OpxCore\Config\Config;
+use OpxCore\Interfaces\ConfigRepositoryInterface;
+use OpxCore\Interfaces\ConfigCacheRepositoryInterface;
+use OpxCore\Config\ConfigFiles;
+use OpxCore\Config\ConfigCacheFile;
+
 $baseDir = dirname(__DIR__, 2);
 
 $app = new \OpxCoreFramework\Application($baseDir);
@@ -9,21 +16,15 @@ $app = new \OpxCoreFramework\Application($baseDir);
 */
 
 // Bind config cache driver with parameters
-$app->bind(
-    \OpxCore\Interfaces\ConfigCacheRepositoryInterface::class,
-    \OpxCore\Config\ConfigCacheFile::class,
+$app->bind(ConfigCacheRepositoryInterface::class, ConfigCacheFile::class,
     ['path' => $app->path('cache/config'), 'prefix' => 'config', 'extension' => 'cache']
 );
 
 // Bind config repository driver with parameters
-$app->bind(
-    \OpxCore\Interfaces\ConfigRepositoryInterface::class,
-    \OpxCore\Config\ConfigFiles::class,
-    ['path' => $app->path('config')]
-);
+$app->bind(ConfigRepositoryInterface::class, ConfigFiles::class, ['path' => $app->path('config')]);
 
 // Bind config driver
-$app->bind(\OpxCore\Interfaces\ConfigInterface::class, \OpxCore\Config\Config::class);
+$app->bind(ConfigInterface::class, Config::class);
 
 $app->init();
 
