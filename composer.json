@@ -4,11 +4,17 @@
   "license": "MIT",
   "type": "project",
   "require": {
-    "php": "^7.1.3",
+    "php": "^7.4",
     "opxcore/app": "dev-master",
-    "opxcore/config-files": "dev-master",
-    "opxcore/config-cache-file": "dev-master",
-    "opxcore/config": "dev-master"
+    "opxcore/container": "^1.0.3",
+    "opxcore/container-interface": "^1.0.4",
+    "opxcore/config": "^1.0.0",
+    "opxcore/config-repository-files": "^1.0.3",
+    "opxcore/config-cache-files": "^1.0.3",
+    "opxcore/config-environment": "^1.0.5",
+    "opxcore/log-manager": "^1.3.0",
+    "opxcore/log-file": "^1.0.3",
+    "opxcore/app-profiler": "^1.0.2"
   },
   "require-dev": {
   },
@@ -16,7 +22,7 @@
     "files": [
     ],
     "psr-4": {
-      "OpxCoreFramework\\": "core/"
+      "OpxCore\\": "core/"
     }
   },
   "autoload-dev": {
@@ -24,6 +30,12 @@
       "Tests\\": "tests/"
     }
   },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "/storage/opxcore/app/.git"
+    }
+  ],
   "minimum-stability": "dev",
   "prefer-stable": true
 }
