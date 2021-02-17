@@ -1,8 +1,10 @@
 <?php
 
 use OpxCore\App\Application;
-use OpxCore\App\Interfaces\ProfilerInterface;
-use OpxCore\App\Profiler;
+use OpxCore\ExceptionHandler\ExceptionHandler;
+use OpxCore\ExceptionHandler\Interfaces\ExceptionHandlerInterface;
+use OpxCore\Profiler\Interfaces\ProfilerInterface;
+use OpxCore\Profiler\Profiler;
 use OpxCore\Config\Config;
 use OpxCore\Config\ConfigCacheFiles;
 use OpxCore\Config\ConfigRepositoryFiles;
@@ -15,76 +17,95 @@ use OpxCore\Container\Container;
 use OpxCore\Log\Interfaces\LoggerInterface;
 use OpxCore\Log\LogManager;
 
+// Use try-catch to handle exceptions before ExceptionHandler would be registered.
 try {
     // Path to project root
     $baseDir = __DIR__;
+    $containerStartTimestamp = hrtime(true);
+    $containerStartMemory = memory_get_usage();
 
     // First create container to bind necessary dependencies for application creation
     $container = new Container;
 
-    // Bind profiler
+    // Bind profiler.
     $container->bind(ProfilerInterface::class, Profiler::class, [
-        'startTime'=> @constant('OPXCORE_START'),
-        'startMem'=> @constant('OPXCORE_START_MEM'),
+        'startTime' => @constant('OPXCORE_START'),
+        'startMem' => @constant('OPXCORE_START_MEM'),
     ]);
 
-    // Create an application
-    $app = new Application($container, $baseDir);
-
-    $app->profiler()->start('config.binding');
-
     // Bind config driver.
-    $app->container()->bind(ConfigInterface::class, Config::class);//, static function (ContainerInterface $container) {
+    $container->bind(ConfigInterface::class, Config::class);//, static function (ContainerInterface $container) {
 
     // Bind config repository driver with parameters, will be injected to Config
-    $app->container()->bind(ConfigRepositoryInterface::class, ConfigRepositoryFiles::class, [
-        'path' => $app->path('config')
+    $container->bind(ConfigRepositoryInterface::class, ConfigRepositoryFiles::class, [
+        'path' => $baseDir . DIRECTORY_SEPARATOR . 'config'
     ]);
 
     // Bind config cache driver with parameters, will be injected to Config
-    $app->container()->bind(ConfigCacheInterface::class, ConfigCacheFiles::class, [
-        'path' => $app->path('storage' . DIRECTORY_SEPARATOR . 'system')
+    $container->bind(ConfigCacheInterface::class, ConfigCacheFiles::class, [
+        'path' => $baseDir . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'system'
     ]);
 
     // Bind environment driver with parameters, will be injected to Config
-    $app->container()->bind(EnvironmentInterface::class, Environment::class, [
-        'path' => $app->path(), 'env' => '.env'
+    $container->bind(EnvironmentInterface::class, Environment::class, [
+        'path' => $baseDir, 'env' => '.env'
     ]);
 
-    $app->profiler()->stop('config.binding');
-
-    // Bind logger. All required arguments would be got from `config/log.php`.
-    $app->profiler()->start('logger.binding');
-
-    $app->container()->bind(LoggerInterface::class, LogManager::class, static function () {
+    // Bind logger. All required arguments would be got from `config/log.php` then logger would be called.
+    // Attention!!! Logger will be available only after application initialization.
+    $container->bind(LoggerInterface::class, LogManager::class, static function () {
         return app()->config()->get('log');
     });
 
-    $app->profiler()->stop('logger.binding');
+    // Bind exception handler as singleton to have access later.
+    $container->singleton(ExceptionHandlerInterface::class, ExceptionHandler::class);
 
-    // define function to access created application everywhere.
-    if (!function_exists('app')) {
-        /**
-         * Get application instance.
-         *
-         * @return Application
-         */
-        function app(): Application
-        {
-            global $app;
+    $containerStopTimestamp = hrtime(true);
+    $containerStopMemory = memory_get_usage();
 
-            return $app;
-        }
+    // Create an application.
+    $app = new Application($container, $baseDir);
+
+} catch (Error | Throwable | Exception $e) {
+    echo "<h1>Application creation error.</h1><p>{$e->getMessage()}</p>";
+    $trace = $e->getTrace();
+    foreach ($trace as $entry) {
+        echo "<p style='font-size: 0.9rem;margin: 0.2rem;'><i>{$entry['file']}:{$entry['line']}</i> " . ($entry['class'] ?? null) . ($entry['type'] ?? null) . ($entry['function'] ?? null) . "</p>";
     }
-
-    $app->init();
-
-    $app->bootstrap();
-
-} catch (Error | Exception $e) {
-    echo "Application bootstrap error.<br>{$e->getMessage()}";
     die();
 }
 
+// Now $app has registered container with bindings (see above) and configured profiler if it was bound.
+// Also exception handler was registered if it was bound.
+// $app->path() is available and points to project root directory.
+
+// Write profiling for autoloader
+$app->profiler()->start('autoload', constant('AUTOLOAD_START'), constant('AUTOLOAD_START_MEM'));
+$app->profiler()->stop('autoload', constant('AUTOLOAD_STOP'), constant('AUTOLOAD_STOP_MEM'));
+
+// Write profiling for container creation and binds after profiler is set (with external captured stamps)
+$app->profiler()->start('container.binding', $containerStartTimestamp, $containerStartMemory);
+$app->profiler()->stop('container.binding', $containerStopTimestamp, $containerStopMemory);
+
+// define function to access created application everywhere.
+$app->profiler()->start('register.app.function');
+if (!function_exists('app')) {
+    /**
+     * Get application instance.
+     *
+     * @return Application
+     */
+    function app(): Application
+    {
+        global $app;
+
+        return $app;
+    }
+}
+$app->profiler()->stop('register.app.function');
+
+$app->init();
+
+$app->bootstrap();
 
 return $app;
