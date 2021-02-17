@@ -104,8 +104,10 @@ if (!function_exists('app')) {
 }
 $app->profiler()->stop('register.app.function');
 
+// Initialize application
 $app->init();
 
+// Run bootstrappers
 $app->bootstrap();
 
 return $app;
