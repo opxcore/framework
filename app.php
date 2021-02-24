@@ -3,6 +3,7 @@
 use OpxCore\App\Application;
 use OpxCore\ExceptionHandler\ExceptionHandler;
 use OpxCore\ExceptionHandler\Interfaces\ExceptionHandlerInterface;
+use OpxCore\Log\Interfaces\LogManagerInterface;
 use OpxCore\Profiler\Interfaces\ProfilerInterface;
 use OpxCore\Profiler\Profiler;
 use OpxCore\Config\Config;
@@ -14,7 +15,6 @@ use OpxCore\Config\Interfaces\ConfigInterface;
 use OpxCore\Config\Interfaces\ConfigRepositoryInterface;
 use OpxCore\Config\Interfaces\EnvironmentInterface;
 use OpxCore\Container\Container;
-use OpxCore\Log\Interfaces\LoggerInterface;
 use OpxCore\Log\LogManager;
 
 // Use try-catch to handle exceptions before ExceptionHandler would be registered.
@@ -53,7 +53,7 @@ try {
 
     // Bind logger. All required arguments would be got from `config/log.php` then logger would be called.
     // Attention!!! Logger will be available only after application initialization.
-    $container->bind(LoggerInterface::class, LogManager::class, static function () {
+    $container->bind(LogManagerInterface::class, LogManager::class, static function () {
         return app()->config()->get('log');
     });
 
