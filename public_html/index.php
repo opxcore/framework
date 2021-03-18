@@ -3,19 +3,12 @@
 define('OPXCORE_START', hrtime(true));
 define('OPXCORE_START_MEM', memory_get_usage());
 
-// Register The Auto Loader and capture data for profiler
-define('AUTOLOAD_START', hrtime(true));
-define('AUTOLOAD_START_MEM', memory_get_usage());
-require __DIR__ . '/../vendor/autoload.php';
-define('AUTOLOAD_STOP', hrtime(true));
-define('AUTOLOAD_STOP_MEM', memory_get_usage());
-
 // Create and bootstrap application instance
 /** @var OpxCore\App\Application $app */
-$app = require __DIR__ . '/../app.php';
+$app = require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'app.php';
 
 // Run application
-//$app->run();
+//$app->handle();
 
 $total = (hrtime(true) - constant('OPXCORE_START')) / 1000;
 echo "<p><b>Total run time: {$total} uS</b></p>";

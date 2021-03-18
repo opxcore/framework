@@ -7,7 +7,7 @@ return [
     'loggers' => [
         'file' => [
             'driver' => LogFile::class,
-            'filename' => app()->path('storage/logs/opx.log'),
+            'filename' => env('BASE_PATH') . '/storage/logs/opx.log',
         ],
     ],
     'groups' => [],

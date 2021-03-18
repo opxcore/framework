@@ -1,25 +1,17 @@
 <?php
 
-use OpxCore\App\Application;
-use OpxCore\Container\Container;
-
 // Use try-catch to handle exceptions before ExceptionHandler would be registered.
 try {
-    // Path to project root
-    $baseDir = __DIR__;
+    // Register The Auto Loader and capture data for profiler
+    define('AUTOLOAD_START', hrtime(true));
+    define('AUTOLOAD_START_MEM', memory_get_usage());
+    require __DIR__ . '/vendor/autoload.php';
+    define('AUTOLOAD_STOP', hrtime(true));
+    define('AUTOLOAD_STOP_MEM', memory_get_usage());
 
-    $containerStartTimestamp = hrtime(true);
-    $containerStartMemory = memory_get_usage();
-
-    // Create container and bind necessary dependencies for application creation
-    require_once 'core/bindings.php';
-    $container = makeContainerBaseBindings(new Container, $baseDir);
-
-    $containerStopTimestamp = hrtime(true);
-    $containerStopMemory = memory_get_usage();
-
-    // Create an application.
-    $app = new Application($container, $baseDir);
+    // Create application with base dependencies
+    require_once 'core/make-app.php';
+    $app = makeApplication(__DIR__);
 
 } catch (Error | Throwable | Exception $e) {
     echo "<h1>Application creation error.</h1><p>{$e->getMessage()}</p>";
@@ -30,34 +22,9 @@ try {
     die();
 }
 
-// Now $app has registered container with bindings (see above) and configured profiler if it was bound.
+// Now $app has registered container with bindings (see core/make-app.php) and configured profiler if it was bound.
 // Also exception handler was registered if it was bound.
 // $app->path() is available and points to project root directory.
-
-// Write profiling for autoloader (with external captured stamps)
-$app->profiler()->start('autoload', constant('AUTOLOAD_START'), constant('AUTOLOAD_START_MEM'));
-$app->profiler()->stop('autoload', constant('AUTOLOAD_STOP'), constant('AUTOLOAD_STOP_MEM'));
-
-// Write profiling (with external captured stamps) for container creation and binds after profiler is set
-$app->profiler()->start('container.binding', $containerStartTimestamp, $containerStartMemory);
-$app->profiler()->stop('container.binding', $containerStopTimestamp, $containerStopMemory);
-
-// define function to access created application everywhere.
-$app->profiler()->start('register.app.function');
-if (!function_exists('app')) {
-    /**
-     * Get application instance.
-     *
-     * @return Application
-     */
-    function app(): Application
-    {
-        global $app;
-
-        return $app;
-    }
-}
-$app->profiler()->stop('register.app.function');
 
 // Initialize application
 $app->init();

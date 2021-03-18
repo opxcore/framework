@@ -1,0 +1,36 @@
+#!/usr/bin/env php
+<?php
+
+use OpxCore\App\Interfaces\AppInterface;
+
+// Use try-catch to handle exceptions before ExceptionHandler would be registered.
+try {
+    // Register The Auto Loader
+    require __DIR__ . '/vendor/autoload.php';
+
+    // Create container and bind necessary dependencies for application creation
+    require_once 'core/make-app.php';
+    $app = makeApplication(__DIR__);
+
+} catch (Error | Throwable | Exception $e) {
+    echo "Application creation error.\n{$e->getMessage()}";
+    $trace = $e->getTrace();
+    foreach ($trace as $entry) {
+        echo "{$entry['file']}:{$entry['line']} " . ($entry['class'] ?? null) . ($entry['type'] ?? null) . ($entry['function'] ?? null) . "\n";
+    }
+    die();
+}
+
+// Now $app has registered container with bindings (see above) and configured profiler if it was bound.
+// Also exception handler was registered if it was bound.
+// $app->path() is available and points to project root directory.
+
+// Initialize application
+$app->init();
+
+// Run application bootstrap
+$app->bootstrap('bootstrappers_console');
+
+$app->outputMode(AppInterface::APP_OUTPUT_CONSOLE);
+
+$app->execute();

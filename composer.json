@@ -7,7 +7,6 @@
     "php": "^7.4",
     "opxcore/app": "dev-master",
     "opxcore/container": "^1.0.3",
-    "opxcore/container-interface": "^1.0.4",
     "opxcore/config": "^1.0.1",
     "opxcore/config-repository-files": "^1.0.4",
     "opxcore/config-cache-files": "^1.0.4",
@@ -16,7 +15,10 @@
     "opxcore/log-file": "^1.0.3",
     "opxcore/profiler": "^1.1.0",
     "opxcore/exception-handler-interface": "^1.0.0",
-    "opxcore/exception-handler": "dev-main"
+    "opxcore/exception-handler": "dev-main",
+    "opxcore/kernel": "dev-master",
+    "opxcore/request": "dev-master",
+    "opxcore/response-interface": "dev-master"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.5.2"
@@ -40,6 +42,10 @@
     {
       "type": "vcs",
       "url": "/storage/opxcore/app/.git"
+    },
+    {
+      "type": "vcs",
+      "url": "/storage/opxcore/kernel/.git"
     },
     {
       "type": "vcs",
